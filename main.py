@@ -1,22 +1,21 @@
-from flask import Flask, url_for, request
+from flask import Flask, url_for, request, render_template
 
 app = Flask(__name__)
+
+params = {'user_name': 'Вася',
+          }
 
 
 @app.route('/')
 @app.route('/index')
 def index():
-    return "Привет, Яндекс!"
+    return render_template("index.html", css_url=f"{url_for('static', filename='css/style.css')}",
+                           title="Главная страница", user_name=params.get('user_name', 'Аноним'))
 
 
 @app.route('/test')
 def my_func():
-    return """<h1>Осторожно! Идёт тестирование!</h1>
-123<br />
-456
-<hr />
-789
-"""
+    return render_template("test.html", title="Тестовая страница", data=['123', '456', 'test connection', '!'])
 
 
 @app.route('/image_sample')
@@ -28,99 +27,7 @@ def image():
 @app.route('/sample_page')
 def return_sample_page():
     elems = ['Пункт первый', "Второе", "Ещё один пункт"]
-    return f"""<!doctype html>
-                <html lang="en">
-                  <head>
-                    <meta charset="utf-8">
-                    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
-  
-                    <link rel="stylesheet" type="text/css" href="{url_for('static', filename='css/style.css')}" />
-                    <title>Привет, Яндекс!</title>
-                  </head>
-                  <body>
-                  <nav class="navbar navbar-expand-lg bg-body-tertiary">
-                      <div class="container-fluid">
-                        <a class="navbar-brand" href="/">Тестовый сайт</a>
-                        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
-                          <span class="navbar-toggler-icon"></span>
-                        </button>
-                        <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
-                          <div class="navbar-nav">
-                            <a class="nav-link active" aria-current="page" href="/index">Home</a>
-                            <a class="nav-link" href="/test">Test</a>
-                            <a class="nav-link" href="/form_sample">Form</a>
-                            <a class="nav-link disabled" aria-disabled="true">Sample page</a>
-                          </div>
-                        </div>
-                      </div>
-                    </nav>
-                    <div class="alert alert-info" role="alert">
-                      Красивое уведомление по теме сайта...
-                    </div>
-                    <h1>Первая HTML-страница</h1>
-                    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
-                    <div class="accordion" id="accordionExample">
-                      <div class="accordion-item">
-                        <h2 class="accordion-header">
-                          <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-                            {elems[0]}
-                          </button>
-                        </h2>
-                        <div id="collapseOne" class="accordion-collapse collapse show" data-bs-parent="#accordionExample">
-                          <div class="accordion-body">
-                            <strong>This is the first item's accordion body.</strong> It is shown by default, until the collapse plugin adds the appropriate classes that we use to style each element. These classes control the overall appearance, as well as the showing and hiding via CSS transitions. You can modify any of this with custom CSS or overriding our default variables. It's also worth noting that just about any HTML can go within the <code>.accordion-body</code>, though the transition does limit overflow.
-                          </div>
-                        </div>
-                      </div>
-                      <div class="accordion-item">
-                        <h2 class="accordion-header">
-                          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-                            {elems[1]}
-                          </button>
-                        </h2>
-                        <div id="collapseTwo" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
-                          <div class="accordion-body">
-                            <strong>This is the second item's accordion body.</strong> It is hidden by default, until the collapse plugin adds the appropriate classes that we use to style each element. These classes control the overall appearance, as well as the showing and hiding via CSS transitions. You can modify any of this with custom CSS or overriding our default variables. It's also worth noting that just about any HTML can go within the <code>.accordion-body</code>, though the transition does limit overflow.
-                          </div>
-                        </div>
-                      </div>
-                      <div class="accordion-item">
-                        <h2 class="accordion-header">
-                          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
-                            {elems[2]}
-                          </button>
-                        </h2>
-                        <div id="collapseThree" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
-                          <div class="accordion-body">
-                            <strong>This is the third item's accordion body.</strong> It is hidden by default, until the collapse plugin adds the appropriate classes that we use to style each element. These classes control the overall appearance, as well as the showing and hiding via CSS transitions. You can modify any of this with custom CSS or overriding our default variables. It's also worth noting that just about any HTML can go within the <code>.accordion-body</code>, though the transition does limit overflow.
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </body>
-                </html>"""
-
-
-@app.route('/two_params/<username>/<int:number>')
-def two_params(username, number):
-    return f'''<!doctype html>
-                <html lang="en">
-                  <head>
-                    <meta charset="utf-8">
-                    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-                    <link rel="stylesheet"
-                   href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css"
-                   integrity="sha384-giJF6kkoqNQ00vy+HMDP7azOuL0xtbfIcaT9wjKHr8RbDVddVHyTfAAsrekwKmP1"
-                   crossorigin="anonymous">
-                    <title>Пример с несколькими параметрами</title>
-                  </head>
-                  <body>
-                    <h2>{username}</h2>
-                    <div>Это первый параметр и его тип: {str(type(username))[1:-1]}</div>
-                    <h2>{number}</h2>
-                    <div>Это второй параметр и его тип: {str(type(number))[1:-1]}</div>
-                  </body>
-                </html>'''
+    return render_template('sample_page.html', title='Особая страница', elems=elems)
 
 
 @app.route('/form_sample', methods=['POST', 'GET'])
@@ -197,6 +104,16 @@ def form_sample():
         except Exception as e:
             print(e)
         return "Форма отправлена"
+
+
+@app.route('/test_carousel')
+def return_carousel():
+    if 'pics' not in params:
+        params['pics'] = [(f"{url_for('static', filename='img/1.jpeg')}", "first"),
+                          (f"{url_for('static', filename='img/2.jpeg')}", "second"),
+                          (f"{url_for('static', filename='img/3.jpeg')}", "third")
+                          ]
+    return render_template('test_carousel.html', title='Карусель', pics=params['pics'])
 
 
 if __name__ == '__main__':
