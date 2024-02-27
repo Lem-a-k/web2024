@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+    {% if avatar %}
+        <h1>Текущий аватар:</h1>
+        <img src={{avatar}} alt="картинка-аватар">
+    {% else %}
+        <h1>Аватар ещё не загружен.</h1>
+    {% endif %}
+
+
+    <form action="" method="post" novalidate>
+        <div>
+            {{ form.csrf_token }}
+        </div>
+        {% for field in form if field.name != 'csrf_token' %}
+            <div>
+                {{ field.label() }}
+                {{ field() }}
+                {% for error in field.errors %}
+                    <div class="error">{{ error }}</div>
+                {% endfor %}
+            </div>
+        {% endfor %}
+    </form>
+{% endblock %}

@@ -1,6 +1,11 @@
 from flask import Flask, url_for, request, render_template
+from flask_wtf import FlaskForm
+from wtforms import FileField, SubmitField
+from wtforms.validators import DataRequired
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
 
 settings = {'user_name': 'Вася',
             }
@@ -36,9 +41,29 @@ def avatar():
         f = request.files['file']
         settings["avatar_file"] = f.filename
         f.save(f'static/img/{f.filename}')
-        print(settings["avatar_file"])
 
     params = {'title': 'Выбор аватара'}
+    if 'avatar_file' in settings:
+        params['avatar'] = url_for('static', filename=f"img/{settings['avatar_file']}")
+    return render_template("avatar.html", **params)
+
+
+class AvatarForm(FlaskForm):
+    file = FileField('Файл', validators=[DataRequired()])
+    submit = SubmitField('Загрузить')
+
+
+@app.route('/avatar2', methods=['POST', 'GET'])
+def avatar2():
+    form = AvatarForm()
+    if form.validate_on_submit():
+        print(form.file.data.filename, secure_filename(form.file.data.filename))
+        avatar_name = secure_filename(form.file.data.filename)
+        settings["avatar_file"] = avatar_name
+        form.file.data.save(f'static/img/{avatar_name}')
+
+    params = {'title': 'Выбор аватара wtf',
+              'form': form}
     if 'avatar_file' in settings:
         params['avatar'] = url_for('static', filename=f"img/{settings['avatar_file']}")
     return render_template("avatar.html", **params)
