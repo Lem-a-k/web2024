@@ -4,6 +4,10 @@ from wtforms import FileField, SubmitField
 from wtforms.validators import DataRequired
 from werkzeug.utils import secure_filename
 
+from data import db_session
+from fill_db import fill_users
+
+DB_NAME = 'site'
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
 
@@ -42,15 +46,15 @@ def avatar():
         settings["avatar_file"] = f.filename
         f.save(f'static/img/{f.filename}')
 
-    params = {'title': 'Выбор аватара'}
+    params = {'title': 'Выбор аватара!!!'}
     if 'avatar_file' in settings:
         params['avatar'] = url_for('static', filename=f"img/{settings['avatar_file']}")
     return render_template("avatar.html", **params)
 
 
 class AvatarForm(FlaskForm):
-    file = FileField('Файл', validators=[DataRequired()])
-    submit = SubmitField('Загрузить')
+    file = FileField('Файл wtf', validators=[DataRequired()])
+    submit = SubmitField('Загрузить wtf')
 
 
 @app.route('/avatar2', methods=['POST', 'GET'])
@@ -66,7 +70,7 @@ def avatar2():
               'form': form}
     if 'avatar_file' in settings:
         params['avatar'] = url_for('static', filename=f"img/{settings['avatar_file']}")
-    return render_template("avatar.html", **params)
+    return render_template("avatar2.html", **params)
 
 
 @app.route('/test_carousel')
@@ -79,5 +83,11 @@ def return_carousel():
     return render_template('test_carousel.html', title='Карусель', pics=settings['pics'])
 
 
+def main():
+    db_session.global_init(f"db/{DB_NAME}.db")
+    fill_users(DB_NAME)
+    app.run(port=8080, host='127.0.0.1')
+
+
 if __name__ == '__main__':
-    app.run(port=8000, host='127.0.0.1')
+    main()
