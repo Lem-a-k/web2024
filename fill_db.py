@@ -2,6 +2,12 @@ from data.users import User
 from data import db_session
 
 
+def get_user(DB_NAME):
+    db_session.global_init(f"db/{DB_NAME}.db")
+    db_sess = db_session.create_session()
+    return db_sess.query(User).filter(User.email == "email@email.ru").first()
+
+
 def fill_users(DB_NAME):
     db_session.global_init(f"db/{DB_NAME}.db")
     db_sess = db_session.create_session()

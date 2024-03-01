@@ -1,11 +1,12 @@
-from flask import Flask, url_for, request, render_template
+from flask import Flask, url_for, request, render_template, session, redirect
 from flask_wtf import FlaskForm
-from wtforms import FileField, SubmitField
+from wtforms import FileField, SubmitField, BooleanField
 from wtforms.validators import DataRequired
+from wtforms import StringField, TextAreaField
 from werkzeug.utils import secure_filename
 
 from data import db_session
-from fill_db import fill_users
+from fill_db import fill_users, get_user
 from data.users import User
 from data.news import News
 
@@ -20,7 +21,11 @@ settings = {'user_name': 'Вася',
 @app.route('/')
 @app.route('/index')
 def index():
-    return render_template("index.html", css_url=f"{url_for('static', filename='css/style.css')}",
+    session['visits_count'] = session.get('visits_count', 0) + 1
+    print(session['visits_count'])
+    return render_template("index.html",
+                           visits=session['visits_count'],
+                           css_url=f"{url_for('static', filename='css/style.css')}",
                            title="Главная страница", user_name=settings.get('user_name', 'Аноним'))
 
 
@@ -85,6 +90,31 @@ def return_carousel():
                             (f"{url_for('static', filename='img/3.jpeg')}", "third")
                             ]
     return render_template('test_carousel.html', title='Карусель', pics=settings['pics'])
+
+
+class NewsForm(FlaskForm):
+    title = StringField('Заголовок', validators=[DataRequired()])
+    content = TextAreaField("Содержание")
+    is_private = BooleanField("Личное")
+    submit = SubmitField('Применить')
+
+
+@app.route('/news', methods=['GET', 'POST'])
+def add_news():
+    form = NewsForm()
+    current_user = get_user(DB_NAME)
+    if form.validate_on_submit():
+        db_sess = db_session.create_session()
+        news = News()
+        news.title = form.title.data
+        news.content = form.content.data
+        news.is_private = form.is_private.data
+        current_user.news.append(news)
+        db_sess.merge(current_user)
+        db_sess.commit()
+        return redirect('/')
+    return render_template('add_news.html', title='Добавление новости',
+                           form=form)
 
 
 def main():
