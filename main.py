@@ -6,6 +6,8 @@ from werkzeug.utils import secure_filename
 
 from data import db_session
 from fill_db import fill_users
+from data.users import User
+from data.news import News
 
 DB_NAME = 'site'
 app = Flask(__name__)
@@ -33,10 +35,12 @@ def image():
            alt="здесь должна была быть картинка, но не нашлась">'''
 
 
-@app.route('/sample_page')
+@app.route('/users_page')
 def return_sample_page():
-    elems = ['Пункт первый', "Второе", "Ещё один пункт"]
-    return render_template('sample_page.html', title='Особая страница', elems=elems)
+    db_sess = db_session.create_session()
+    users = db_sess.query(User).all()
+    print(users)
+    return render_template('users_page.html', title='Список польователей', users=users)
 
 
 @app.route('/avatar', methods=['POST', 'GET'])
