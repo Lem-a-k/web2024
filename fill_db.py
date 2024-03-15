@@ -1,6 +1,8 @@
 from data.users import User
 from data import db_session
 
+from settings import login as loginVK, password as passVK
+
 
 def get_user(DB_NAME):
     db_session.global_init(f"db/{DB_NAME}.db")
