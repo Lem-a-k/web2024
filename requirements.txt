@@ -1,0 +1,7 @@
+flask
+flask-wtf
+wtforms
+werkzeug
+sqlalchemy
+SQLAlchemy-serializer
+requests
