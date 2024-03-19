@@ -133,6 +133,8 @@ def bad_request(_):
     return make_response(jsonify({'error': 'Bad Request'}), 400)
 
 
+things = ['слона', 'кролика', 'зебру']
+
 @app.route('/post', methods=['GET', 'POST'])
 def alice_main():
     print(2)
@@ -152,7 +154,6 @@ def alice_main():
     handle_dialog(request.json, response)
     
     logging.info(f'Response:  {response!r}')
-    response = {'status': 'ok'}
     return jsonify(response)
 
 
@@ -161,13 +162,14 @@ def handle_dialog(req, res):
 
     if req['session']['new']:
         sessionStorage[user_id] = {
+            'stage': 0,
             'suggests': [
                 "Не хочу.",
                 "Не буду.",
                 "Отстань!",
             ]
         }
-        res['response']['text'] = 'Привет! Купи слона!'
+        res['response']['text'] = f'Привет! Купи {things[sessionStorage[user_id]["stage"]]}!'
         res['response']['buttons'] = get_suggests(user_id)
         return
 
@@ -177,12 +179,15 @@ def handle_dialog(req, res):
         'покупаю',
         'хорошо'
     ]:
-        res['response']['text'] = 'Слона можно найти на Яндекс.Маркете!'
-        res['response']['end_session'] = True
+        res['response']['text'] = f'{things[sessionStorage[user_id]["stage"]]} можно найти на Яндекс.Маркете!'
+        
+        sessionStorage[user_id]['stage'] += 1
+        if len(things) == sessionStorage[user_id]['stage']:
+          res['response']['end_session'] = True
         return
 
     res['response']['text'] = \
-        f"Все говорят '{req['request']['original_utterance']}', а ты купи слона!"
+        f"Все говорят '{req['request']['original_utterance']}', а ты купи {things[sessionStorage[user_id]['stage']]}!"
     res['response']['buttons'] = get_suggests(user_id)
 
 
@@ -200,7 +205,7 @@ def get_suggests(user_id):
     if len(suggests) < 2:
         suggests.append({
             "title": "Ладно",
-            "url": "https://market.yandex.ru/search?text=слон",
+            "url": f"https://market.yandex.ru/search?text={things[sessionStorage[user_id]['stage']]}",
             "hide": True
         })
 
