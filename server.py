@@ -1,5 +1,7 @@
 import logging
 
+import pymorphy3
+
 from flask import Flask, url_for, request, render_template, session, redirect, make_response, jsonify
 from flask_wtf import FlaskForm
 from wtforms import FileField, SubmitField, BooleanField
@@ -23,6 +25,7 @@ settings = {'user_name': 'Вася',
 
 sessionStorage = {}
 
+morph = pymorphy3.MorphAnalyzer()
 
 @app.route('/')
 @app.route('/index')
@@ -133,7 +136,7 @@ def bad_request(_):
     return make_response(jsonify({'error': 'Bad Request'}), 400)
 
 
-things = ['слона', 'кролика', 'зебру']
+things = ['слона', 'кролика', 'зебру', 'кенгуру', 'льва']
 
 @app.route('/post', methods=['GET', 'POST'])
 def alice_main():
@@ -173,17 +176,24 @@ def handle_dialog(req, res):
         res['response']['buttons'] = get_suggests(user_id)
         return
 
-    if req['request']['original_utterance'].lower() in [
+    if any(x in req['request']['original_utterance'].lower() for x in [
         'ладно',
         'куплю',
         'покупаю',
         'хорошо'
-    ]:
-        res['response']['text'] = f'{things[sessionStorage[user_id]["stage"]]} можно найти на Яндекс.Маркете!'
+    ]):
+        res['response']['text'] = f'{things[sessionStorage[user_id]["stage"]].capitalize()} можно найти на Яндекс.Маркете!'
         
         sessionStorage[user_id]['stage'] += 1
         if len(things) == sessionStorage[user_id]['stage']:
           res['response']['end_session'] = True
+        else:
+          res['response']['text'] += f' А теперь купи {things[sessionStorage[user_id]["stage"]]}.'
+          sessionStorage[user_id]['suggests'] = [
+                "Не хочу.",
+                "Не буду.",
+                "Отстань!",
+            ]
         return
 
     res['response']['text'] = \
@@ -201,11 +211,12 @@ def get_suggests(user_id):
 
     session['suggests'] = session['suggests'][1:]
     sessionStorage[user_id] = session
-
+    
+    nf = morph.parse(things[sessionStorage[user_id]['stage']])[0].normal_form
     if len(suggests) < 2:
         suggests.append({
             "title": "Ладно",
-            "url": f"https://market.yandex.ru/search?text={things[sessionStorage[user_id]['stage']]}",
+            "url": f"https://market.yandex.ru/search?text={nf}",
             "hide": True
         })
 
