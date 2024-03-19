@@ -139,19 +139,19 @@ def alice_main():
     if request.method == 'GET':
         return "post"
     print(3)
-    # logging.info(f'Request: {request.json!r}')
+    logging.info(f'Request: {request.json!r}')
 
-    # response = {
-    #     'session': request.json['session'],
-    #     'version': request.json['version'],
-    #     'response': {
-    #         'end_session': False
-    #     }
-    # }
-    # print(1)
-    # handle_dialog(request.json, response)
-    #
-    # logging.info(f'Response:  {response!r}')
+    response = {
+        'session': request.json['session'],
+        'version': request.json['version'],
+        'response': {
+            'end_session': False
+        }
+    }
+    print(1)
+    handle_dialog(request.json, response)
+    
+    logging.info(f'Response:  {response!r}')
     response = {'status': 'ok'}
     return jsonify(response)
 
