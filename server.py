@@ -1,3 +1,5 @@
+import logging
+
 from flask import Flask, url_for, request, render_template, session, redirect, make_response, jsonify
 from flask_wtf import FlaskForm
 from wtforms import FileField, SubmitField, BooleanField
@@ -14,8 +16,12 @@ DB_NAME = 'site'
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
 
+logging.basicConfig(level=logging.INFO)
+
 settings = {'user_name': 'Вася',
             }
+
+sessionStorage = {}
 
 
 @app.route('/')
@@ -125,6 +131,80 @@ def not_found(error):
 @app.errorhandler(400)
 def bad_request(_):
     return make_response(jsonify({'error': 'Bad Request'}), 400)
+
+
+@app.route('/post', methods=['GET', 'POST'])
+def alice_main():
+    print(2)
+    if request.method == 'GET':
+        return "post"
+    print(3)
+    # logging.info(f'Request: {request.json!r}')
+
+    # response = {
+    #     'session': request.json['session'],
+    #     'version': request.json['version'],
+    #     'response': {
+    #         'end_session': False
+    #     }
+    # }
+    # print(1)
+    # handle_dialog(request.json, response)
+    #
+    # logging.info(f'Response:  {response!r}')
+    response = {'status': 'ok'}
+    return jsonify(response)
+
+
+def handle_dialog(req, res):
+    user_id = req['session']['user_id']
+
+    if req['session']['new']:
+        sessionStorage[user_id] = {
+            'suggests': [
+                "Не хочу.",
+                "Не буду.",
+                "Отстань!",
+            ]
+        }
+        res['response']['text'] = 'Привет! Купи слона!'
+        res['response']['buttons'] = get_suggests(user_id)
+        return
+
+    if req['request']['original_utterance'].lower() in [
+        'ладно',
+        'куплю',
+        'покупаю',
+        'хорошо'
+    ]:
+        res['response']['text'] = 'Слона можно найти на Яндекс.Маркете!'
+        res['response']['end_session'] = True
+        return
+
+    res['response']['text'] = \
+        f"Все говорят '{req['request']['original_utterance']}', а ты купи слона!"
+    res['response']['buttons'] = get_suggests(user_id)
+
+
+def get_suggests(user_id):
+    session = sessionStorage[user_id]
+
+    suggests = [
+        {'title': suggest, 'hide': True}
+        for suggest in session['suggests'][:2]
+    ]
+
+    session['suggests'] = session['suggests'][1:]
+    sessionStorage[user_id] = session
+
+    if len(suggests) < 2:
+        suggests.append({
+            "title": "Ладно",
+            "url": "https://market.yandex.ru/search?text=слон",
+            "hide": True
+        })
+
+    return suggests
 
 
 def main():
