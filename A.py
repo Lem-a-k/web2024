@@ -12,3 +12,5 @@ with open('test.csv') as in_file:
 # дополнительные преобразования
 with open('test.json', 'w') as out_file:
     json.dump(lines, out_file)
+
+print(123)
