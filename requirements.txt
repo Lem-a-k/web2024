@@ -5,3 +5,4 @@ werkzeug
 sqlalchemy
 SQLAlchemy-serializer
 requests
+pymorphy3

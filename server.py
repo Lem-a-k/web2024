@@ -30,7 +30,6 @@ sessionStorage = {}
 
 morph = pymorphy3.MorphAnalyzer()
 
-
 @app.route('/')
 @app.route('/index')
 def index():
@@ -142,9 +141,9 @@ def bad_request(_):
 
 things = ['слона', 'кролика', 'зебру', 'кенгуру', 'льва']
 
-
 @app.route('/post', methods=['GET', 'POST'])
 def alice_main():
+    print(2)
     if request.method == 'GET':
         return "post"
     logging.info(f'Request: {request.json!r}')
@@ -184,15 +183,14 @@ def handle_dialog(req, res):
         'покупаю',
         'хорошо'
     ]):
-        res['response'][
-            'text'] = f'{things[sessionStorage[user_id]["stage"]].capitalize()} можно найти на Яндекс.Маркете!'
+        res['response']['text'] = f'{things[sessionStorage[user_id]["stage"]].capitalize()} можно найти на Яндекс.Маркете!'
 
         sessionStorage[user_id]['stage'] += 1
         if len(things) == sessionStorage[user_id]['stage']:
-            res['response']['end_session'] = True
+          res['response']['end_session'] = True
         else:
-            res['response']['text'] += f' А теперь купи {things[sessionStorage[user_id]["stage"]]}.'
-            sessionStorage[user_id]['suggests'] = [
+          res['response']['text'] += f' А теперь купи {things[sessionStorage[user_id]["stage"]]}.'
+          sessionStorage[user_id]['suggests'] = [
                 "Не хочу.",
                 "Не буду.",
                 "Отстань!",
@@ -207,7 +205,7 @@ def handle_dialog(req, res):
     res['response']['card']['image_id'] = im_id
 
     res['response']['text'] = \
-        f"Все говорят '{req['request']['original_utterance']}', а ты купи {things[sessionStorage[user_id]['stage']]}!"
+        f"Все говорят '{req['request']['original_utterance']}', а ты купи слона!"
     res['response']['buttons'] = get_suggests(user_id)
 
 
@@ -226,7 +224,7 @@ def get_suggests(user_id):
     if len(suggests) < 2:
         suggests.append({
             "title": "Ладно",
-            "url": f"https://market.yandex.ru/search?text={nf}",
+            "url": "https://market.yandex.ru/search?text=слон",
             "hide": True
         })
 
