@@ -1,7 +1,6 @@
 import logging
 
 import pymorphy3
-
 from flask import Flask, url_for, request, render_template, session, redirect, make_response, jsonify
 from flask_wtf import FlaskForm
 from wtforms import FileField, SubmitField, BooleanField
@@ -13,6 +12,10 @@ from data import db_session, news_api
 from fill_db import fill_users, get_user
 from data.users import User
 from data.news import News
+
+from settings import OAuth_TOKEN
+from geocoder import get_city_map_url
+from images import upload_picture
 
 DB_NAME = 'site'
 app = Flask(__name__)
@@ -140,10 +143,9 @@ things = ['слона', 'кролика', 'зебру', 'кенгуру', 'ль�
 
 @app.route('/post', methods=['GET', 'POST'])
 def alice_main():
-    print(2)
     if request.method == 'GET':
+        
         return "post"
-    print(3)
     logging.info(f'Request: {request.json!r}')
 
     response = {
@@ -153,7 +155,6 @@ def alice_main():
             'end_session': False
         }
     }
-    print(1)
     handle_dialog(request.json, response)
     
     logging.info(f'Response:  {response!r}')
@@ -195,7 +196,14 @@ def handle_dialog(req, res):
                 "Отстань!",
             ]
         return
-
+    map_url = get_city_map_url(req['request']['original_utterance'])
+    result = upload_picture(map_url)
+    im_id = result['image']['id']
+    res['response']['card'] = {}
+    res['response']['card']['type'] = 'BigImage'
+    res['response']['card']['title'] = f"Это {req['request']['original_utterance']}"
+    res['response']['card']['image_id'] = im_id          
+            
     res['response']['text'] = \
         f"Все говорят '{req['request']['original_utterance']}', а ты купи {things[sessionStorage[user_id]['stage']]}!"
     res['response']['buttons'] = get_suggests(user_id)
