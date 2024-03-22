@@ -1,5 +1,6 @@
 import logging
 
+import pymorphy3
 from flask import Flask, url_for, request, render_template, session, redirect, make_response, jsonify
 from flask_wtf import FlaskForm
 from wtforms import FileField, SubmitField, BooleanField
@@ -12,6 +13,10 @@ from fill_db import fill_users, get_user
 from data.users import User
 from data.news import News
 
+from settings import OAuth_TOKEN
+from geocoder import get_city_map_url
+from images import upload_picture
+
 DB_NAME = 'site'
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
@@ -22,6 +27,8 @@ settings = {'user_name': 'Вася',
             }
 
 sessionStorage = {}
+
+morph = pymorphy3.MorphAnalyzer()
 
 
 @app.route('/')
@@ -133,26 +140,25 @@ def bad_request(_):
     return make_response(jsonify({'error': 'Bad Request'}), 400)
 
 
+things = ['слона', 'кролика', 'зебру', 'кенгуру', 'льва']
+
+
 @app.route('/post', methods=['GET', 'POST'])
 def alice_main():
-    print(2)
     if request.method == 'GET':
         return "post"
-    print(3)
-    # logging.info(f'Request: {request.json!r}')
+    logging.info(f'Request: {request.json!r}')
 
-    # response = {
-    #     'session': request.json['session'],
-    #     'version': request.json['version'],
-    #     'response': {
-    #         'end_session': False
-    #     }
-    # }
-    # print(1)
-    # handle_dialog(request.json, response)
-    #
-    # logging.info(f'Response:  {response!r}')
-    response = {'status': 'ok'}
+    response = {
+        'session': request.json['session'],
+        'version': request.json['version'],
+        'response': {
+            'end_session': False
+        }
+    }
+    handle_dialog(request.json, response)
+
+    logging.info(f'Response:  {response!r}')
     return jsonify(response)
 
 
@@ -161,28 +167,47 @@ def handle_dialog(req, res):
 
     if req['session']['new']:
         sessionStorage[user_id] = {
+            'stage': 0,
             'suggests': [
                 "Не хочу.",
                 "Не буду.",
                 "Отстань!",
             ]
         }
-        res['response']['text'] = 'Привет! Купи слона!'
+        res['response']['text'] = f'Привет! Купи {things[sessionStorage[user_id]["stage"]]}!'
         res['response']['buttons'] = get_suggests(user_id)
         return
 
-    if req['request']['original_utterance'].lower() in [
+    if any(x in req['request']['original_utterance'].lower() for x in [
         'ладно',
         'куплю',
         'покупаю',
         'хорошо'
-    ]:
-        res['response']['text'] = 'Слона можно найти на Яндекс.Маркете!'
-        res['response']['end_session'] = True
+    ]):
+        res['response'][
+            'text'] = f'{things[sessionStorage[user_id]["stage"]].capitalize()} можно найти на Яндекс.Маркете!'
+
+        sessionStorage[user_id]['stage'] += 1
+        if len(things) == sessionStorage[user_id]['stage']:
+            res['response']['end_session'] = True
+        else:
+            res['response']['text'] += f' А теперь купи {things[sessionStorage[user_id]["stage"]]}.'
+            sessionStorage[user_id]['suggests'] = [
+                "Не хочу.",
+                "Не буду.",
+                "Отстань!",
+            ]
         return
+    map_url = get_city_map_url(req['request']['original_utterance'])
+    result = upload_picture(map_url)
+    im_id = result['image']['id']
+    res['response']['card'] = {}
+    res['response']['card']['type'] = 'BigImage'
+    res['response']['card']['title'] = f"Это {req['request']['original_utterance']}"
+    res['response']['card']['image_id'] = im_id
 
     res['response']['text'] = \
-        f"Все говорят '{req['request']['original_utterance']}', а ты купи слона!"
+        f"Все говорят '{req['request']['original_utterance']}', а ты купи {things[sessionStorage[user_id]['stage']]}!"
     res['response']['buttons'] = get_suggests(user_id)
 
 
@@ -197,10 +222,11 @@ def get_suggests(user_id):
     session['suggests'] = session['suggests'][1:]
     sessionStorage[user_id] = session
 
+    nf = morph.parse(things[sessionStorage[user_id]['stage']])[0].normal_form
     if len(suggests) < 2:
         suggests.append({
             "title": "Ладно",
-            "url": "https://market.yandex.ru/search?text=слон",
+            "url": f"https://market.yandex.ru/search?text={nf}",
             "hide": True
         })
 
