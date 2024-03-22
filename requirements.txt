@@ -4,5 +4,6 @@ wtforms
 werkzeug
 sqlalchemy
 SQLAlchemy-serializer
+urllib3==1.26.6
 requests
 pymorphy3
